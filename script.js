@@ -1,5 +1,10 @@
-// script.js (الكود الكامل والمصحح)
-const GOOGLE_SHEETS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw65_9AcvpTGrYds913hUnUyvL_IvRmd1FsH46qf1ndQtan7s9vi5vEevpg2EHfqJLD/exec';
+// script.js
+// هذا هو الكود النهائي الذي يرسل البيانات إلى Airtable
+
+// 🚨 تم تحديث هذه القيم بالقيم التي قدمتها
+const AIRTABLE_PERSONAL_ACCESS_TOKEN = 'patuOKjjf1y7gyGlw';
+const AIRTABLE_BASE_ID = 'appo6j1hYlAjz0Hc0';
+const AIRTABLE_TABLE_NAME = 'Visit_Logs'; // تم التحديث بناءً على تأكيدك
 
 // عناصر النموذج
 const visitForm = document.getElementById('visitForm');
@@ -205,19 +210,19 @@ async function handleSubmit(event) {
     const customerCode = selectedCustomer ? selectedCustomer.Customer_Code : '';
 
     const dataToSubmit = {
-        visitID: generateVisitID(),
-        customerCode: customerCode,
-        customerName: customerNameInput.value,
-        salesRepName: salesRepNameSelect.value,
-        visitDate: formatDate(now),
-        visitTime: formatTime(now),
-        visitPurpose: visitPurposeSelect.value,
-        visitOutcome: visitOutcomeSelect.value,
-        visitType: visitTypeSelect.value,
-        entryUserName: entryUserNameInput.value,
-        timestamp: formatTimestamp(now),
-        customerType: customerTypeInput.value,
-        notes: notesInput.value || ''
+        'visitID': generateVisitID(),
+        'customerCode': customerCode,
+        'customerName': customerNameInput.value,
+        'salesRepName': salesRepNameSelect.value,
+        'visitDate': formatDate(now),
+        'visitTime': formatTime(now),
+        'visitPurpose': visitPurposeSelect.value,
+        'visitOutcome': visitOutcomeSelect.value,
+        'visitType': visitTypeSelect.value,
+        'entryUserName': entryUserNameInput.value,
+        'timestamp': formatTimestamp(now),
+        'customerType': customerTypeInput.value,
+        'notes': notesInput.value || ''
     };
 
     const available = { 'المشروبات': [], '5فايف ستار': [], 'تيارا': [], 'البسكويت': [], 'الشوكولاتة': [], 'الحلويات': [] };
@@ -250,35 +255,36 @@ async function handleSubmit(event) {
     dataToSubmit.unavailableChocolates = unavailable['الشوكولاتة'].join(', ');
     dataToSubmit.availableSweets = available['الحلويات'].join(', ');
     dataToSubmit.unavailableSweets = unavailable['الحلويات'].join(', ');
-    
-    // تحويل الكائن إلى string للاستخدام في URL
-    const queryString = new URLSearchParams(dataToSubmit).toString();
-    const finalUrl = `${GOOGLE_SHEETS_WEB_APP_URL}?${queryString}`;
 
-    console.log('Final URL to fetch:', finalUrl);
+    console.log('Final data to submit:', dataToSubmit);
 
     try {
-        const response = await fetch(finalUrl);
+        const response = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${AIRTABLE_PERSONAL_ACCESS_TOKEN}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 'fields': dataToSubmit })
+        });
 
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const errorText = await response.text();
+            throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
         }
 
         const result = await response.json();
         console.log('Server response:', result);
         
-        if (result.success) {
-            showMessage('تم الإرسال!', 'تم إرسال النموذج بنجاح.', 'success');
-            visitForm.reset();
-            productsDisplayDiv.innerHTML = '';
-            const checkboxes = productCategoriesDiv.querySelectorAll('input[type="checkbox"]');
-            checkboxes.forEach(c => c.checked = false);
-        } else {
-            showMessage('فشل الإرسال', result.error || 'لم يتم استلام استجابة ناجحة من الخادم.', 'error');
-        }
+        showMessage('تم الإرسال!', 'تم إرسال النموذج بنجاح.', 'success');
+        visitForm.reset();
+        productsDisplayDiv.innerHTML = '';
+        const checkboxes = productCategoriesDiv.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(c => c.checked = false);
+
     } catch (error) {
         console.error('فشل الإرسال:', error);
-        showMessage('فشل الإرسال', 'حدث خطأ أثناء إرسال البيانات. حاول مرة أخرى.', 'error');
+        showMessage('فشل الإرسال', `حدث خطأ أثناء إرسال البيانات. ${error.message}. حاول مرة أخرى.`, 'error');
     } finally {
         submitBtn.disabled = false;
         loadingSpinner.classList.add('hidden');
