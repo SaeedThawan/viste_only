@@ -1,4 +1,4 @@
-// script.js (الكود المعدّل)
+// script.js (Your original code, which is correct)
 const GOOGLE_SHEETS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw65_9AcvpTGrYds913hUnUyvL_IvRmd1FsH46qf1ndQtan7s9vi5vEevpg2EHfqJLD/exec';
 
 let productsData = [];
@@ -227,7 +227,6 @@ async function handleSubmit(event) {
     const selectedCustomer = customersMain.find(c => c.Customer_Name_AR === customerNameInput.value);
     const customerCode = selectedCustomer ? selectedCustomer.Customer_Code : '';
 
-    // إنشاء كائن FormData جديد
     const formData = new FormData();
     formData.append('visitID', generateVisitID());
     formData.append('customerCode', customerCode);
