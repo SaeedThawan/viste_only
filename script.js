@@ -2,9 +2,9 @@
 // هذا هو الكود النهائي الذي يرسل البيانات إلى Airtable
 
 // 🚨 تم تحديث هذه القيم بالقيم التي قدمتها
-const AIRTABLE_PERSONAL_ACCESS_TOKEN = 'patuOKjjf1y7gyGlw';
+const AIRTABLE_PERSONAL_ACCESS_TOKEN = 'patuOKjjf1y7gyGlw.3f392a18af9a0bc6c01f0317a89ab3d098dcefb41b95733e7e3f96f2cad777da';
 const AIRTABLE_BASE_ID = 'appo6j1hYlAjz0Hc0';
-const AIRTABLE_TABLE_NAME = 'Visit_Logs'; // تم التحديث بناءً على تأكيدك
+const AIRTABLE_TABLE_NAME = 'Visit_Logs'; 
 
 // عناصر النموذج
 const visitForm = document.getElementById('visitForm');
