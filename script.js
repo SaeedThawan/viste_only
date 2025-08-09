@@ -185,7 +185,7 @@ function validateProductStatuses() {
     return allValid;
 }
 
-// ---------------------- وظيفة إرسال النموذج ----------------------
+// ---------------------- وظيفة إرسال النموذج (مُعدلة) ----------------------
 async function handleSubmit(event) {
     event.preventDefault();
 
@@ -250,16 +250,15 @@ async function handleSubmit(event) {
     dataToSubmit.unavailableChocolates = unavailable['الشوكولاتة'].join(', ');
     dataToSubmit.availableSweets = available['الحلويات'].join(', ');
     dataToSubmit.unavailableSweets = unavailable['الحلويات'].join(', ');
+    
+    // تحويل الكائن إلى string للاستخدام في URL
+    const queryString = new URLSearchParams(dataToSubmit).toString();
+    const finalUrl = `${GOOGLE_SHEETS_WEB_APP_URL}?${queryString}`;
 
-    console.log('Final data to submit:', dataToSubmit);
+    console.log('Final URL to fetch:', finalUrl);
 
     try {
-        const response = await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(dataToSubmit),
-            redirect: "follow"
-        });
+        const response = await fetch(finalUrl);
 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
