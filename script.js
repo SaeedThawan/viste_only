@@ -1,5 +1,4 @@
 // script.js (الكود المعدّل)
-
 const GOOGLE_SHEETS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw65_9AcvpTGrYds913hUnUyvL_IvRmd1FsH46qf1ndQtan7s9vi5vEevpg2EHfqJLD/exec';
 
 let productsData = [];
@@ -14,7 +13,7 @@ const salesRepNameSelect = document.getElementById('salesRepName');
 const customerNameInput = document.getElementById('customerName');
 const customerListDatalist = document.getElementById('customerList');
 const visitTypeSelect = document.getElementById('visitType');
-const visitPurposeSelect = document = document.getElementById('visitPurpose');
+const visitPurposeSelect = document.getElementById('visitPurpose');
 const visitOutcomeSelect = document.getElementById('visitOutcome');
 const entryUserNameInput = document.getElementById('entryUserName');
 const customerTypeInput = document.getElementById('customerType');
@@ -228,21 +227,21 @@ async function handleSubmit(event) {
     const selectedCustomer = customersMain.find(c => c.Customer_Name_AR === customerNameInput.value);
     const customerCode = selectedCustomer ? selectedCustomer.Customer_Code : '';
 
-    const dataToSubmit = {
-        visitID: generateVisitID(),
-        customerCode: customerCode,
-        customerName: customerNameInput.value,
-        salesRepName: salesRepNameSelect.value,
-        visitDate: formatDate(now),
-        visitTime: formatTime(now),
-        visitPurpose: visitPurposeSelect.value,
-        visitOutcome: visitOutcomeSelect.value,
-        visitType: visitTypeSelect.value,
-        entryUserName: entryUserNameInput.value,
-        timestamp: formatTimestamp(now),
-        customerType: customerTypeInput.value,
-        notes: notesInput.value || ''
-    };
+    // إنشاء كائن FormData جديد
+    const formData = new FormData();
+    formData.append('visitID', generateVisitID());
+    formData.append('customerCode', customerCode);
+    formData.append('customerName', customerNameInput.value);
+    formData.append('salesRepName', salesRepNameSelect.value);
+    formData.append('visitDate', formatDate(now));
+    formData.append('visitTime', formatTime(now));
+    formData.append('visitPurpose', visitPurposeSelect.value);
+    formData.append('visitOutcome', visitOutcomeSelect.value);
+    formData.append('visitType', visitTypeSelect.value);
+    formData.append('entryUserName', entryUserNameInput.value);
+    formData.append('timestamp', formatTimestamp(now));
+    formData.append('customerType', customerTypeInput.value);
+    formData.append('notes', notesInput.value || '');
 
     const available = {
         'المشروبات': [],
@@ -276,44 +275,43 @@ async function handleSubmit(event) {
         }
     });
 
-    dataToSubmit.availableDrinks = available['المشروبات'].join(', ');
-    dataToSubmit.unavailableDrinks = unavailable['المشروبات'].join(', ');
-    dataToSubmit.available5Star = available['5فايف ستار'].join(', ');
-    dataToSubmit.unavailable5Star = unavailable['5فايف ستار'].join(', ');
-    dataToSubmit.availableTiara = available['تيارا'].join(', ');
-    dataToSubmit.unavailableTiara = unavailable['تيارا'].join(', ');
-    dataToSubmit.availableBiscuits = available['البسكويت'].join(', ');
-    dataToSubmit.unavailableBiscuits = unavailable['البسكويت'].join(', ');
-    dataToSubmit.availableChocolates = available['الشوكولاتة'].join(', ');
-    dataToSubmit.unavailableChocolates = unavailable['الشوكولاتة'].join(', ');
-    dataToSubmit.availableSweets = available['الحلويات'].join(', ');
-    dataToSubmit.unavailableSweets = unavailable['الحلويات'].join(', ');
+    formData.append('availableDrinks', available['المشروبات'].join(', '));
+    formData.append('unavailableDrinks', unavailable['المشروبات'].join(', '));
+    formData.append('available5Star', available['5فايف ستار'].join(', '));
+    formData.append('unavailable5Star', unavailable['5فايف ستار'].join(', '));
+    formData.append('availableTiara', available['تيارا'].join(', '));
+    formData.append('unavailableTiara', unavailable['تيارا'].join(', '));
+    formData.append('availableBiscuits', available['البسكويت'].join(', '));
+    formData.append('unavailableBiscuits', unavailable['البسكويت'].join(', '));
+    formData.append('availableChocolates', available['الشوكولاتة'].join(', '));
+    formData.append('unavailableChocolates', unavailable['الشوكولاتة'].join(', '));
+    formData.append('availableSweets', available['الحلويات'].join(', '));
+    formData.append('unavailableSweets', unavailable['الحلويات'].join(', '));
 
-    console.log('Final data to submit:', dataToSubmit);
+    console.log('Final data to submit:', Object.fromEntries(formData));
 
     try {
         const response = await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
             method: 'POST',
-            // استخدم 'application/json' لأنه الأنسب لإرسال البيانات كـ JSON
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(dataToSubmit),
+            body: formData, // إرسال البيانات كـ FormData مباشرة
+            // لا نحتاج لإضافة Headers، المتصفح سيتولى ذلك
         });
 
-        // تم تعديل هذا الجزء للتعامل مع استجابة نصية بسيطة، بدلاً من JSON
-        const result = await response.text();
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json(); 
         console.log('Server response:', result);
         
-        // إذا كانت الاستجابة تحتوي على كلمة "Success"، اعتبرها نجاحًا
-        if (result.includes('Success')) {
+        if (result.success) {
             showSuccessMessage();
             visitForm.reset();
             productsDisplayDiv.innerHTML = '';
             const checkboxes = productCategoriesDiv.querySelectorAll('input[type="checkbox"]');
             checkboxes.forEach(c => c.checked = false);
         } else {
-            showErrorMessage(result || 'لم يتم استلام استجابة ناجحة من الخادم.');
+            showErrorMessage(result.error || 'لم يتم استلام استجابة ناجحة من الخادم.');
         }
 
     } catch (error) {
