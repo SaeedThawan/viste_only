@@ -1,7 +1,7 @@
 // script.js
 // هذا هو الكود النهائي الذي يرسل البيانات إلى Airtable
 
-// 🚨 القيم الصحيحة التي يجب استخدامها
+// 🚨 تم تحديث هذه القيم بالقيم التي قدمتها
 const AIRTABLE_PERSONAL_ACCESS_TOKEN = 'patuOKjjf1y7gyGlw.3f392a18af9a0bc6c01f0317a89ab3d098dcefb41b95733e7e3f96f2cad777da';
 const AIRTABLE_BASE_ID = 'appo6j1hYlAjz0Hc0';
 const AIRTABLE_TABLE_NAME = 'Visit_Logs'; 
@@ -235,64 +235,4 @@ async function handleSubmit(event) {
         const selected = div.querySelector('input[type="radio"]:checked');
         
         if (selected) {
-            if (selected.value === 'متوفر') {
-                available[category].push(name);
-            } else {
-                unavailable[category].push(name);
-            }
-        }
-    });
-
-    dataToSubmit.availableDrinks = available['المشروبات'].join(', ');
-    dataToSubmit.unavailableDrinks = unavailable['المشروبات'].join(', ');
-    dataToSubmit.available5Star = available['5فايف ستار'].join(', ');
-    dataToSubmit.unavailable5Star = unavailable['5فايف ستار'].join(', ');
-    dataToSubmit.availableTiara = available['تيارا'].join(', ');
-    dataToSubmit.unavailableTiara = unavailable['تيارا'].join(', ');
-    dataToSubmit.availableBiscuits = available['البسكويت'].join(', ');
-    dataToSubmit.unavailableBiscuits = unavailable['البسكويت'].join(', ');
-    dataToSubmit.availableChocolates = available['الشوكولاتة'].join(', ');
-    dataToSubmit.unavailableChocolates = unavailable['الشوكولاتة'].join(', ');
-    dataToSubmit.availableSweets = available['الحلويات'].join(', ');
-    dataToSubmit.unavailableSweets = unavailable['الحلويات'].join(', ');
-
-    console.log('Final data to submit:', dataToSubmit);
-
-    try {
-        const response = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${AIRTABLE_PERSONAL_ACCESS_TOKEN}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ 'fields': dataToSubmit })
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-        }
-
-        const result = await response.json();
-        console.log('Server response:', result);
-        
-        showMessage('تم الإرسال!', 'تم إرسال النموذج بنجاح.', 'success');
-        visitForm.reset();
-        productsDisplayDiv.innerHTML = '';
-        const checkboxes = productCategoriesDiv.querySelectorAll('input[type="checkbox"]');
-        checkboxes.forEach(c => c.checked = false);
-
-    } catch (error) {
-        console.error('فشل الإرسال:', error);
-        showMessage('فشل الإرسال', `حدث خطأ أثناء إرسال البيانات. ${error.message}. حاول مرة أخرى.`, 'error');
-    } finally {
-        submitBtn.disabled = false;
-        loadingSpinner.classList.add('hidden');
-    }
-}
-
-// ---------------------- بداية تشغيل الكود ----------------------
-document.addEventListener('DOMContentLoaded', () => {
-    loadAllData();
-    visitForm.addEventListener('submit', handleSubmit);
-});
+            if (selected.value
