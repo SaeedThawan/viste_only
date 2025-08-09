@@ -1,13 +1,7 @@
 // script.js (الكود الكامل والمصحح)
 const GOOGLE_SHEETS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw65_9AcvpTGrYds913hUnUyvL_IvRmd1FsH46qf1ndQtan7s9vi5vEevpg2EHfqJLD/exec';
 
-let productsData = [];
-let salesRepresentatives = [];
-let customersMain = [];
-let visitOutcomes = [];
-let visitPurposes = [];
-let visitTypes = [];
-
+// عناصر النموذج
 const visitForm = document.getElementById('visitForm');
 const salesRepNameSelect = document.getElementById('salesRepName');
 const customerNameInput = document.getElementById('customerName');
@@ -23,31 +17,18 @@ const productsDisplayDiv = document.getElementById('productsDisplay');
 const submitBtn = document.getElementById('submitBtn');
 const loadingSpinner = document.getElementById('loadingSpinner');
 
-function showSuccessMessage() {
-    Swal.fire({
-        title: '✅ تم الإرسال!',
-        text: 'تم إرسال النموذج بنجاح.',
-        icon: 'success',
-        confirmButtonText: 'ممتاز'
-    });
-}
+// متغيرات لتخزين البيانات
+let productsData = {};
+let customersMain = [];
+let salesRepresentatives = [];
+let visitOutcomes = [];
+let visitPurposes = [];
+let visitTypes = [];
+let productCategories = {};
 
-function showErrorMessage(message) {
-    Swal.fire({
-        title: '❌ فشل الإرسال',
-        text: message || 'حدث خطأ أثناء إرسال النموذج. حاول مجددًا.',
-        icon: 'error',
-        confirmButtonText: 'موافق'
-    });
-}
-
-function showWarningMessage(message) {
-    Swal.fire({
-        title: '⚠️ تنبيه',
-        text: message,
-        icon: 'warning',
-        confirmButtonText: 'موافق'
-    });
+// ---------------------- وظائف مساعدة ----------------------
+function showMessage(title, text, icon) {
+    Swal.fire({ title, text, icon, confirmButtonText: 'موافق' });
 }
 
 function generateVisitID() {
@@ -68,6 +49,7 @@ function formatTimestamp(date) {
     return date.toLocaleString('ar-SA', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
 }
 
+// ---------------------- وظائف تحميل البيانات وتعبئتها ----------------------
 async function fetchJsonData(url) {
     try {
         const response = await fetch(url);
@@ -75,20 +57,13 @@ async function fetchJsonData(url) {
         return await response.json();
     } catch (error) {
         console.error(`خطأ في تحميل ${url}:`, error);
-        showErrorMessage(`فشل تحميل البيانات من ${url}`);
+        showMessage('فشل التحميل', `فشل تحميل البيانات من ${url}`, 'error');
         return [];
     }
 }
 
 async function loadAllData() {
-    [
-        productsData,
-        salesRepresentatives,
-        customersMain,
-        visitOutcomes,
-        visitPurposes,
-        visitTypes
-    ] = await Promise.all([
+    [productsData, salesRepresentatives, customersMain, visitOutcomes, visitPurposes, visitTypes] = await Promise.all([
         fetchJsonData('products.json'),
         fetchJsonData('sales_representatives.json'),
         fetchJsonData('customers_main.json'),
@@ -96,6 +71,7 @@ async function loadAllData() {
         fetchJsonData('visit_purposes.json'),
         fetchJsonData('visit_types.json')
     ]);
+
     populateSelect(salesRepNameSelect, salesRepresentatives, 'Sales_Rep_Name_AR', 'Sales_Rep_Name_AR');
     populateCustomerDatalist();
     populateSelect(visitTypeSelect, visitTypes, 'Visit_Type_Name_AR', 'Visit_Type_Name_AR');
@@ -128,7 +104,6 @@ function populateCustomerDatalist() {
     });
 }
 
-let productCategories = {};
 function setupProductCategories() {
     productCategoriesDiv.innerHTML = '';
     productCategories = {};
@@ -204,18 +179,19 @@ function validateProductStatuses() {
     });
 
     if (!allValid) {
-        showWarningMessage('يرجى تحديد حالة التوفر لكل المنتجات الظاهرة.');
+        showMessage('تنبيه', 'يرجى تحديد حالة التوفر لكل المنتجات الظاهرة.', 'warning');
     }
 
     return allValid;
 }
 
+// ---------------------- وظيفة إرسال النموذج ----------------------
 async function handleSubmit(event) {
     event.preventDefault();
 
     if (!visitForm.checkValidity()) {
         visitForm.reportValidity();
-        showWarningMessage('يرجى تعبئة جميع الحقول المطلوبة.');
+        showMessage('تنبيه', 'يرجى تعبئة جميع الحقول المطلوبة.', 'warning');
         return;
     }
 
@@ -252,7 +228,7 @@ async function handleSubmit(event) {
         const name = div.querySelector('label').textContent;
         const category = div.getAttribute('data-category');
         const selected = div.querySelector('input[type="radio"]:checked');
-
+        
         if (selected) {
             if (selected.value === 'متوفر') {
                 available[category].push(name);
@@ -282,6 +258,7 @@ async function handleSubmit(event) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(dataToSubmit),
+            redirect: "follow"
         });
 
         if (!response.ok) {
@@ -292,24 +269,24 @@ async function handleSubmit(event) {
         console.log('Server response:', result);
         
         if (result.success) {
-            showSuccessMessage();
+            showMessage('تم الإرسال!', 'تم إرسال النموذج بنجاح.', 'success');
             visitForm.reset();
             productsDisplayDiv.innerHTML = '';
             const checkboxes = productCategoriesDiv.querySelectorAll('input[type="checkbox"]');
             checkboxes.forEach(c => c.checked = false);
         } else {
-            showErrorMessage(result.error || 'لم يتم استلام استجابة ناجحة من الخادم.');
+            showMessage('فشل الإرسال', result.error || 'لم يتم استلام استجابة ناجحة من الخادم.', 'error');
         }
-
     } catch (error) {
         console.error('فشل الإرسال:', error);
-        showErrorMessage('حدث خطأ أثناء إرسال البيانات. حاول مرة أخرى.');
+        showMessage('فشل الإرسال', 'حدث خطأ أثناء إرسال البيانات. حاول مرة أخرى.', 'error');
     } finally {
         submitBtn.disabled = false;
         loadingSpinner.classList.add('hidden');
     }
 }
 
+// ---------------------- بداية تشغيل الكود ----------------------
 document.addEventListener('DOMContentLoaded', () => {
     loadAllData();
     visitForm.addEventListener('submit', handleSubmit);
