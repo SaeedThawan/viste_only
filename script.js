@@ -1,4 +1,4 @@
-const GOOGLE_SHEETS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw65_9AcvpTGrYds913hUnUyvL_IvRmd1FsH46qf1ndQtan7s9vi5vEevpg2EHfqJLD/exec';
+const GOOGLE_SHEETS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyounw2-fv8EZeuKGpSKizMdZnmUnwdj7Nhf_O-6mMiWpgfDZbml9DIuMTkIuTIIxvgsQ/exec';
 
 // تعريف جميع عناصر HTML
 const visitForm = document.getElementById('visitForm');
@@ -8,7 +8,7 @@ const customerListContainer = document.getElementById('customerListContainer');
 const customerTypeInput = document.getElementById('customerType');
 const visitTypeSelect = document.getElementById('visitType');
 const visitPurposeSelect = document.getElementById('visitPurpose');
-const visitOutcomeSelect = document.getElementById('visitOutcome');
+const visitOutcomeSelect = document = document.getElementById('visitOutcome');
 const entryUserNameInput = document.getElementById('entryUserName');
 const notesInput = document.getElementById('notes');
 const productCategoriesDiv = document.getElementById('productCategories');
@@ -132,8 +132,7 @@ function setupProductCategories() {
         if (!productCategories[categoryName]) productCategories[categoryName] = [];
         productCategories[categoryName].push(product);
     });
-    
-    // تم تعديل هذا الجزء لعرض الأسماء العربية فقط
+
     for (const category in productCategories) {
         const div = document.createElement('div');
         div.className = 'flex items-center';
@@ -267,8 +266,22 @@ async function handleSubmit(event) {
         notes: notesInput.value || ''
     };
 
-    const available = {};
-    const unavailable = {};
+    const available = {
+        'المشروبات': [],
+        '5فايف ستار': [],
+        'تيارا': [],
+        'البسكويت': [],
+        'الشوكولاتة': [],
+        'الحلويات': []
+    };
+    const unavailable = {
+        'المشروبات': [],
+        '5فايف ستار': [],
+        'تيارا': [],
+        'البسكويت': [],
+        'الشوكولاتة': [],
+        'الحلويات': []
+    };
 
     const items = productsDisplayDiv.querySelectorAll('.product-item');
     items.forEach(div => {
@@ -278,22 +291,26 @@ async function handleSubmit(event) {
         
         if (selected) {
             if (selected.value === 'متوفر') {
-                if (!available[category]) available[category] = [];
                 available[category].push(name);
             } else {
-                if (!unavailable[category]) unavailable[category] = [];
                 unavailable[category].push(name);
             }
         }
     });
 
-    for (const category in available) {
-        dataToSubmit[`available_${category}`] = available[category].join(', ');
-    }
-    for (const category in unavailable) {
-        dataToSubmit[`unavailable_${category}`] = unavailable[category].join(', ');
-    }
-    
+    dataToSubmit.availableDrinks = available['المشروبات'].join(', ');
+    dataToSubmit.unavailableDrinks = unavailable['المشروبات'].join(', ');
+    dataToSubmit.available5Star = available['5فايف ستار'].join(', ');
+    dataToSubmit.unavailable5Star = unavailable['5فايف ستار'].join(', ');
+    dataToSubmit.availableTiara = available['تيارا'].join(', ');
+    dataToSubmit.unavailableTiara = unavailable['تيارا'].join(', ');
+    dataToSubmit.availableBiscuits = available['البسكويت'].join(', ');
+    dataToSubmit.unavailableBiscuits = unavailable['البسكويت'].join(', ');
+    dataToSubmit.availableChocolates = available['الشوكولاتة'].join(', ');
+    dataToSubmit.unavailableChocolates = unavailable['الشوكولاتة'].join(', ');
+    dataToSubmit.availableSweets = available['الحلويات'].join(', ');
+    dataToSubmit.unavailableSweets = unavailable['الحلويات'].join(', ');
+
     console.log('Final data to submit:', dataToSubmit);
 
     try {
