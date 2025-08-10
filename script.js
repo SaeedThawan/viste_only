@@ -249,22 +249,8 @@ async function handleSubmit(event) {
         notes: notesInput.value || ''
     };
 
-    const available = {
-        'المشروبات': [],
-        '5فايف ستار': [],
-        'تيارا': [],
-        'البسكويت': [],
-        'الشوكولاتة': [],
-        'الحلويات': []
-    };
-    const unavailable = {
-        'المشروبات': [],
-        '5فايف ستار': [],
-        'تيارا': [],
-        'البسكويت': [],
-        'الشوكولاتة': [],
-        'الحلويات': []
-    };
+    const available = {};
+    const unavailable = {};
 
     const items = productsDisplayDiv.querySelectorAll('.product-item');
     items.forEach(div => {
@@ -274,26 +260,22 @@ async function handleSubmit(event) {
         
         if (selected) {
             if (selected.value === 'متوفر') {
+                if (!available[category]) available[category] = [];
                 available[category].push(name);
             } else {
+                if (!unavailable[category]) unavailable[category] = [];
                 unavailable[category].push(name);
             }
         }
     });
 
-    dataToSubmit.availableDrinks = available['المشروبات'].join(', ');
-    dataToSubmit.unavailableDrinks = unavailable['المشروبات'].join(', ');
-    dataToSubmit.available5Star = available['5فايف ستار'].join(', ');
-    dataToSubmit.unavailable5Star = unavailable['5فايف ستار'].join(', ');
-    dataToSubmit.availableTiara = available['تيارا'].join(', ');
-    dataToSubmit.unavailableTiara = unavailable['تيارا'].join(', ');
-    dataToSubmit.availableBiscuits = available['البسكويت'].join(', ');
-    dataToSubmit.unavailableBiscuits = unavailable['البسكويت'].join(', ');
-    dataToSubmit.availableChocolates = available['الشوكولاتة'].join(', ');
-    dataToSubmit.unavailableChocolates = unavailable['الشوكولاتة'].join(', ');
-    dataToSubmit.availableSweets = available['الحلويات'].join(', ');
-    dataToSubmit.unavailableSweets = unavailable['الحلويات'].join(', ');
-
+    for (const category in available) {
+        dataToSubmit[`available_${category}`] = available[category].join(', ');
+    }
+    for (const category in unavailable) {
+        dataToSubmit[`unavailable_${category}`] = unavailable[category].join(', ');
+    }
+    
     console.log('Final data to submit:', dataToSubmit);
 
     try {
