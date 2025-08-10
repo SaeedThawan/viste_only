@@ -1,10 +1,8 @@
 // script.js
-// هذا هو الكود النهائي الذي يرسل البيانات إلى Airtable
+// هذا هو الكود النهائي الذي يرسل البيانات إلى Google Sheets
 
-// 🚨 القيم الصحيحة التي يجب استخدامها
-const AIRTABLE_PERSONAL_ACCESS_TOKEN = 'patuOKjjf1y7gyGlw.3f392a18af9a0bc6c01f0317a89ab3d098dcefb41b95733e7e3f96f2cad777da';
-const AIRTABLE_BASE_ID = 'appo6j1hYlAjz0Hc0';
-const AIRTABLE_TABLE_NAME = 'Visit_Logs'; 
+// 🚨 هذا هو رابط النشر الجديد الذي أرسلته
+const GOOGLE_SHEETS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw65_9AcvpTGrYds913hUnUyvL_IvRmd1FsH46qf1ndQtan7s9vi5vEevpg2EHfqJLD/exec';
 
 // عناصر النموذج
 const visitForm = document.getElementById('visitForm');
@@ -259,13 +257,12 @@ async function handleSubmit(event) {
     console.log('Final data to submit:', dataToSubmit);
 
     try {
-        const response = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}`, {
+        const response = await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${AIRTABLE_PERSONAL_ACCESS_TOKEN}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ 'fields': dataToSubmit })
+            body: JSON.stringify(dataToSubmit)
         });
 
         if (!response.ok) {
@@ -276,11 +273,15 @@ async function handleSubmit(event) {
         const result = await response.json();
         console.log('Server response:', result);
         
-        showMessage('تم الإرسال!', 'تم إرسال النموذج بنجاح.', 'success');
-        visitForm.reset();
-        productsDisplayDiv.innerHTML = '';
-        const checkboxes = productCategoriesDiv.querySelectorAll('input[type="checkbox"]');
-        checkboxes.forEach(c => c.checked = false);
+        if (result.success) {
+            showMessage('تم الإرسال!', 'تم إرسال النموذج بنجاح.', 'success');
+            visitForm.reset();
+            productsDisplayDiv.innerHTML = '';
+            const checkboxes = productCategoriesDiv.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(c => c.checked = false);
+        } else {
+            showMessage('فشل الإرسال', `حدث خطأ أثناء إرسال البيانات. ${result.message}. حاول مرة أخرى.`, 'error');
+        }
 
     } catch (error) {
         console.error('فشل الإرسال:', error);
