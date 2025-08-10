@@ -1,10 +1,15 @@
 // script.js
 // هذا هو الكود النهائي الذي يرسل البيانات إلى Google Sheets
 
-// 🚨 هذا هو رابط النشر الجديد الذي أرسلته
 const GOOGLE_SHEETS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw65_9AcvpTGrYds913hUnUyvL_IvRmd1FsH46qf1ndQtan7s9vi5vEevpg2EHfqJLD/exec';
 
-// عناصر النموذج
+let productsData = [];
+let salesRepresentatives = [];
+let customersMain = [];
+let visitOutcomes = [];
+let visitPurposes = [];
+let visitTypes = [];
+
 const visitForm = document.getElementById('visitForm');
 const salesRepNameSelect = document.getElementById('salesRepName');
 const customerNameInput = document.getElementById('customerName');
@@ -20,18 +25,31 @@ const productsDisplayDiv = document.getElementById('productsDisplay');
 const submitBtn = document.getElementById('submitBtn');
 const loadingSpinner = document.getElementById('loadingSpinner');
 
-// متغيرات لتخزين البيانات
-let productsData = {};
-let customersMain = [];
-let salesRepresentatives = [];
-let visitOutcomes = [];
-let visitPurposes = [];
-let visitTypes = [];
-let productCategories = {};
+function showSuccessMessage() {
+    Swal.fire({
+        title: '✅ تم الإرسال!',
+        text: 'تم إرسال النموذج بنجاح.',
+        icon: 'success',
+        confirmButtonText: 'ممتاز'
+    });
+}
 
-// ---------------------- وظائف مساعدة ----------------------
-function showMessage(title, text, icon) {
-    Swal.fire({ title, text, icon, confirmButtonText: 'موافق' });
+function showErrorMessage(message) {
+    Swal.fire({
+        title: '❌ فشل الإرسال',
+        text: message || 'حدث خطأ أثناء إرسال النموذج. حاول مجددًا.',
+        icon: 'error',
+        confirmButtonText: 'موافق'
+    });
+}
+
+function showWarningMessage(message) {
+    Swal.fire({
+        title: '⚠️ تنبيه',
+        text: message,
+        icon: 'warning',
+        confirmButtonText: 'موافق'
+    });
 }
 
 function generateVisitID() {
@@ -52,7 +70,6 @@ function formatTimestamp(date) {
     return date.toLocaleString('ar-SA', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
 }
 
-// ---------------------- وظائف تحميل البيانات وتعبئتها ----------------------
 async function fetchJsonData(url) {
     try {
         const response = await fetch(url);
@@ -60,13 +77,20 @@ async function fetchJsonData(url) {
         return await response.json();
     } catch (error) {
         console.error(`خطأ في تحميل ${url}:`, error);
-        showMessage('فشل التحميل', `فشل تحميل البيانات من ${url}`, 'error');
+        showErrorMessage(`فشل تحميل البيانات من ${url}`);
         return [];
     }
 }
 
 async function loadAllData() {
-    [productsData, salesRepresentatives, customersMain, visitOutcomes, visitPurposes, visitTypes] = await Promise.all([
+    [
+        productsData,
+        salesRepresentatives,
+        customersMain,
+        visitOutcomes,
+        visitPurposes,
+        visitTypes
+    ] = await Promise.all([
         fetchJsonData('products.json'),
         fetchJsonData('sales_representatives.json'),
         fetchJsonData('customers_main.json'),
@@ -74,7 +98,6 @@ async function loadAllData() {
         fetchJsonData('visit_purposes.json'),
         fetchJsonData('visit_types.json')
     ]);
-
     populateSelect(salesRepNameSelect, salesRepresentatives, 'Sales_Rep_Name_AR', 'Sales_Rep_Name_AR');
     populateCustomerDatalist();
     populateSelect(visitTypeSelect, visitTypes, 'Visit_Type_Name_AR', 'Visit_Type_Name_AR');
@@ -107,6 +130,7 @@ function populateCustomerDatalist() {
     });
 }
 
+let productCategories = {};
 function setupProductCategories() {
     productCategoriesDiv.innerHTML = '';
     productCategories = {};
@@ -182,19 +206,18 @@ function validateProductStatuses() {
     });
 
     if (!allValid) {
-        showMessage('تنبيه', 'يرجى تحديد حالة التوفر لكل المنتجات الظاهرة.', 'warning');
+        showWarningMessage('يرجى تحديد حالة التوفر لكل المنتجات الظاهرة.');
     }
 
     return allValid;
 }
 
-// ---------------------- وظيفة إرسال النموذج (مُعدلة) ----------------------
 async function handleSubmit(event) {
     event.preventDefault();
 
     if (!visitForm.checkValidity()) {
         visitForm.reportValidity();
-        showMessage('تنبيه', 'يرجى تعبئة جميع الحقول المطلوبة.', 'warning');
+        showWarningMessage('يرجى تعبئة جميع الحقول المطلوبة.');
         return;
     }
 
@@ -208,19 +231,19 @@ async function handleSubmit(event) {
     const customerCode = selectedCustomer ? selectedCustomer.Customer_Code : '';
 
     const dataToSubmit = {
-        'visitID': generateVisitID(),
-        'customerCode': customerCode,
-        'customerName': customerNameInput.value,
-        'salesRepName': salesRepNameSelect.value,
-        'visitDate': formatDate(now),
-        'visitTime': formatTime(now),
-        'visitPurpose': visitPurposeSelect.value,
-        'visitOutcome': visitOutcomeSelect.value,
-        'visitType': visitTypeSelect.value,
-        'entryUserName': entryUserNameInput.value,
-        'timestamp': formatTimestamp(now),
-        'customerType': customerTypeInput.value,
-        'notes': notesInput.value || ''
+        visitID: generateVisitID(),
+        customerCode: customerCode,
+        customerName: customerNameInput.value,
+        salesRepName: salesRepNameSelect.value,
+        visitDate: formatDate(now),
+        visitTime: formatTime(now),
+        visitPurpose: visitPurposeSelect.value,
+        visitOutcome: visitOutcomeSelect.value,
+        visitType: visitTypeSelect.value,
+        entryUserName: entryUserNameInput.value,
+        timestamp: formatTimestamp(now),
+        customerType: customerTypeInput.value,
+        notes: notesInput.value || ''
     };
 
     const available = { 'المشروبات': [], '5فايف ستار': [], 'تيارا': [], 'البسكويت': [], 'الشوكولاتة': [], 'الحلويات': [] };
@@ -231,7 +254,7 @@ async function handleSubmit(event) {
         const name = div.querySelector('label').textContent;
         const category = div.getAttribute('data-category');
         const selected = div.querySelector('input[type="radio"]:checked');
-        
+
         if (selected) {
             if (selected.value === 'متوفر') {
                 available[category].push(name);
@@ -259,40 +282,36 @@ async function handleSubmit(event) {
     try {
         const response = await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(dataToSubmit)
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dataToSubmit),
         });
 
         if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const result = await response.json();
         console.log('Server response:', result);
         
         if (result.success) {
-            showMessage('تم الإرسال!', 'تم إرسال النموذج بنجاح.', 'success');
+            showSuccessMessage();
             visitForm.reset();
             productsDisplayDiv.innerHTML = '';
             const checkboxes = productCategoriesDiv.querySelectorAll('input[type="checkbox"]');
             checkboxes.forEach(c => c.checked = false);
         } else {
-            showMessage('فشل الإرسال', `حدث خطأ أثناء إرسال البيانات. ${result.message}. حاول مرة أخرى.`, 'error');
+            showErrorMessage(result.error || 'لم يتم استلام استجابة ناجحة من الخادم.');
         }
 
     } catch (error) {
         console.error('فشل الإرسال:', error);
-        showMessage('فشل الإرسال', `حدث خطأ أثناء إرسال البيانات. ${error.message}. حاول مرة أخرى.`, 'error');
+        showErrorMessage('حدث خطأ أثناء إرسال البيانات. حاول مرة أخرى.');
     } finally {
         submitBtn.disabled = false;
         loadingSpinner.classList.add('hidden');
     }
 }
 
-// ---------------------- بداية تشغيل الكود ----------------------
 document.addEventListener('DOMContentLoaded', () => {
     loadAllData();
     visitForm.addEventListener('submit', handleSubmit);
