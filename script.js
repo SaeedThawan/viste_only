@@ -1,6 +1,3 @@
-// script.js
-// هذا هو الكود النهائي والمُطور
-
 const GOOGLE_SHEETS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw65_9AcvpTGrYds913hUnUyvL_IvRmd1FsH46qf1ndQtan7s9vi5vEevpg2EHfqJLD/exec';
 
 // تعريف جميع عناصر HTML
@@ -95,7 +92,8 @@ async function loadAllData() {
         salesRepresentatives,
         customersMain,
         visitOutcomes,
-        ...visitTypes
+        visitPurposes,
+        visitTypes
     ] = await Promise.all([
         fetchJsonData('products.json'),
         fetchJsonData('sales_representatives.json'),
@@ -251,8 +249,22 @@ async function handleSubmit(event) {
         notes: notesInput.value || ''
     };
 
-    const available = {};
-    const unavailable = {};
+    const available = {
+        'المشروبات': [],
+        '5فايف ستار': [],
+        'تيارا': [],
+        'البسكويت': [],
+        'الشوكولاتة': [],
+        'الحلويات': []
+    };
+    const unavailable = {
+        'المشروبات': [],
+        '5فايف ستار': [],
+        'تيارا': [],
+        'البسكويت': [],
+        'الشوكولاتة': [],
+        'الحلويات': []
+    };
 
     const items = productsDisplayDiv.querySelectorAll('.product-item');
     items.forEach(div => {
@@ -262,22 +274,26 @@ async function handleSubmit(event) {
         
         if (selected) {
             if (selected.value === 'متوفر') {
-                if (!available[category]) available[category] = [];
                 available[category].push(name);
             } else {
-                if (!unavailable[category]) unavailable[category] = [];
                 unavailable[category].push(name);
             }
         }
     });
 
-    for (const category in available) {
-        dataToSubmit[`available_${category}`] = available[category].join(', ');
-    }
-    for (const category in unavailable) {
-        dataToSubmit[`unavailable_${category}`] = unavailable[category].join(', ');
-    }
-    
+    dataToSubmit.availableDrinks = available['المشروبات'].join(', ');
+    dataToSubmit.unavailableDrinks = unavailable['المشروبات'].join(', ');
+    dataToSubmit.available5Star = available['5فايف ستار'].join(', ');
+    dataToSubmit.unavailable5Star = unavailable['5فايف ستار'].join(', ');
+    dataToSubmit.availableTiara = available['تيارا'].join(', ');
+    dataToSubmit.unavailableTiara = unavailable['تيارا'].join(', ');
+    dataToSubmit.availableBiscuits = available['البسكويت'].join(', ');
+    dataToSubmit.unavailableBiscuits = unavailable['البسكويت'].join(', ');
+    dataToSubmit.availableChocolates = available['الشوكولاتة'].join(', ');
+    dataToSubmit.unavailableChocolates = unavailable['الشوكولاتة'].join(', ');
+    dataToSubmit.availableSweets = available['الحلويات'].join(', ');
+    dataToSubmit.unavailableSweets = unavailable['الحلويات'].join(', ');
+
     console.log('Final data to submit:', dataToSubmit);
 
     try {
