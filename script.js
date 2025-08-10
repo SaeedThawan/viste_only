@@ -1,15 +1,18 @@
-const GOOGLE_SHEETS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyounw2-fv8EZeuKGpSKizMdZnmUnwdj7Nhf_O-6mMiWpgfDZbml9DIuMTkIuTIIxvgsQ/exec';
+// script.js
+// هذا هو الكود النهائي الذي يجمع كل البيانات ويرسلها
+
+const GOOGLE_SHEETS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw65_9AcvpTGrYds913hUnUyvL_IvRmd1FsH46qf1ndQtan7s9vi5vEevpg2EHfqJLD/exec';
 
 // تعريف جميع عناصر HTML
 const visitForm = document.getElementById('visitForm');
 const salesRepNameSelect = document.getElementById('salesRepName');
 const customerNameInput = document.getElementById('customerName');
-const customerListContainer = document.getElementById('customerListContainer');
-const customerTypeInput = document.getElementById('customerType');
+const customerListDatalist = document.getElementById('customerList');
 const visitTypeSelect = document.getElementById('visitType');
 const visitPurposeSelect = document.getElementById('visitPurpose');
-const visitOutcomeSelect = document = document.getElementById('visitOutcome');
+const visitOutcomeSelect = document.getElementById('visitOutcome');
 const entryUserNameInput = document.getElementById('entryUserName');
+const customerTypeInput = document.getElementById('customerType');
 const notesInput = document.getElementById('notes');
 const productCategoriesDiv = document.getElementById('productCategories');
 const productsDisplayDiv = document.getElementById('productsDisplay');
@@ -103,6 +106,7 @@ async function loadAllData() {
         fetchJsonData('visit_types.json')
     ]);
     populateSelect(salesRepNameSelect, salesRepresentatives, 'Sales_Rep_Name_AR', 'Sales_Rep_Name_AR');
+    populateCustomerDatalist();
     populateSelect(visitTypeSelect, visitTypes, 'Visit_Type_Name_AR', 'Visit_Type_Name_AR');
     populateSelect(visitPurposeSelect, visitPurposes);
     populateSelect(visitOutcomeSelect, visitOutcomes);
@@ -124,6 +128,15 @@ function populateSelect(selectElement, dataArray, valueKey, textKey) {
     });
 }
 
+function populateCustomerDatalist() {
+    customerListDatalist.innerHTML = '';
+    customersMain.forEach(customer => {
+        const option = document.createElement('option');
+        option.value = customer.Customer_Name_AR;
+        customerListDatalist.appendChild(option);
+    });
+}
+
 function setupProductCategories() {
     productCategoriesDiv.innerHTML = '';
     productCategories = {};
@@ -133,13 +146,22 @@ function setupProductCategories() {
         productCategories[categoryName].push(product);
     });
 
+    const categoryNames = {
+        'المشروبات': 'Drinks',
+        '5فايف ستار': '5Star',
+        'تيارا': 'Tiara',
+        'البسكويت': 'Biscuits',
+        'الشوكولاتة': 'Chocolates',
+        'الحلويات': 'Sweets'
+    };
+
     for (const category in productCategories) {
         const div = document.createElement('div');
         div.className = 'flex items-center';
-        const safeId = `cat-${category.replace(/\s/g, '-')}`;
+        const safeId = `cat-${categoryNames[category] || category.replace(/\s/g, '-')}`;
         div.innerHTML = `
             <input type="checkbox" id="${safeId}" value="${category}" class="h-5 w-5 text-indigo-600 border-gray-300 rounded cursor-pointer">
-            <label for="${safeId}" class="ml-2 text-sm font-medium text-gray-700">${category}</label>
+            <label for="${safeId}" class="ml-2 text-sm font-medium text-gray-700">${categoryNames[category] ? categoryNames[category].replace(/_/g, ' ') : category}</label>
         `;
         productCategoriesDiv.appendChild(div);
         div.querySelector('input').addEventListener('change', e => toggleProductsDisplay(e.target.value, e.target.checked));
@@ -196,34 +218,6 @@ function validateProductStatuses() {
     return allValid;
 }
 
-// دالة البحث عن العملاء
-function handleCustomerSearch(event) {
-    const searchTerm = event.target.value.toLowerCase();
-    customerListContainer.innerHTML = '';
-    
-    if (searchTerm.length > 0) {
-        const filteredCustomers = customersMain.filter(customer =>
-            customer.Customer_Name_AR.toLowerCase().includes(searchTerm)
-        );
-
-        if (filteredCustomers.length > 0) {
-            const ul = document.createElement('ul');
-            ul.className = 'absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 shadow-lg max-h-60 overflow-y-auto';
-            filteredCustomers.forEach(customer => {
-                const li = document.createElement('li');
-                li.className = 'px-4 py-2 hover:bg-gray-100 cursor-pointer';
-                li.textContent = customer.Customer_Name_AR;
-                li.addEventListener('click', () => {
-                    customerNameInput.value = customer.Customer_Name_AR;
-                    customerListContainer.innerHTML = '';
-                });
-                ul.appendChild(li);
-            });
-            customerListContainer.appendChild(ul);
-        }
-    }
-}
-
 async function handleSubmit(event) {
     event.preventDefault();
 
@@ -240,15 +234,7 @@ async function handleSubmit(event) {
 
     const now = new Date();
     const selectedCustomer = customersMain.find(c => c.Customer_Name_AR === customerNameInput.value);
-
-    if (!selectedCustomer) {
-        showWarningMessage('الرجاء اختيار عميل من القائمة المقترحة.');
-        submitBtn.disabled = false;
-        loadingSpinner.classList.add('hidden');
-        return;
-    }
-
-    const customerCode = selectedCustomer.Customer_Code;
+    const customerCode = selectedCustomer ? selectedCustomer.Customer_Code : '';
 
     const dataToSubmit = {
         visitID: generateVisitID(),
@@ -336,5 +322,4 @@ async function handleSubmit(event) {
 document.addEventListener('DOMContentLoaded', () => {
     loadAllData();
     visitForm.addEventListener('submit', handleSubmit);
-    customerNameInput.addEventListener('input', handleCustomerSearch);
 });
