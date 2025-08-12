@@ -60,17 +60,22 @@ function generateVisitID() {
     return `VISIT-${timestamp}-${randomString}`;
 }
 
+// **هذه هي الدوال التي تم تعديلها**
 function formatDate(date) {
-    return date.toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
+    // تنسيق التاريخ الميلادي (مثلاً: August 25, 2025)
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
 function formatTime(date) {
-    return date.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+    // تنسيق الوقت بنظام 24 ساعة (مثلاً: 20:14:51)
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
 }
 
 function formatTimestamp(date) {
-    return date.toLocaleString('ar-SA', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+    // تنسيق التاريخ والوقت بالتقويم الميلادي (مثلاً: 8/25/2025, 8:14:51 PM)
+    return date.toLocaleString('en-US', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
 }
+// نهاية الدوال المعدلة
 
 // دالة لجلب البيانات من ملفات JSON
 async function fetchJsonData(url) {
