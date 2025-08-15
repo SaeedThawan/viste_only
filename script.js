@@ -60,22 +60,17 @@ function generateVisitID() {
     return `VISIT-${timestamp}-${randomString}`;
 }
 
-// **هذه هي الدوال التي تم تعديلها**
 function formatDate(date) {
-    // تنسيق التاريخ الميلادي (مثلاً: August 25, 2025)
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
 function formatTime(date) {
-    // تنسيق الوقت بنظام 24 ساعة (مثلاً: 20:14:51)
     return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
 }
 
 function formatTimestamp(date) {
-    // تنسيق التاريخ والوقت بالتقويم الميلادي (مثلاً: 8/25/2025, 8:14:51 PM)
     return date.toLocaleString('en-US', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
 }
-// نهاية الدوال المعدلة
 
 // دالة لجلب البيانات من ملفات JSON
 async function fetchJsonData(url) {
@@ -108,7 +103,6 @@ async function loadAllData() {
         fetchJsonData('visit_types.json')
     ]);
     populateSelect(salesRepNameSelect, salesRepresentatives, 'Sales_Rep_Name_AR', 'Sales_Rep_Name_AR');
-    // تمت إزالة populateCustomerDatalist() واستبدالها بوظيفة البحث الجديدة
     populateSelect(visitTypeSelect, visitTypes, 'Visit_Type_Name_AR', 'Visit_Type_Name_AR');
     populateSelect(visitPurposeSelect, visitPurposes);
     populateSelect(visitOutcomeSelect, visitOutcomes);
@@ -139,7 +133,6 @@ function setupProductCategories() {
         productCategories[categoryName].push(product);
     });
     
-    // تم تعديل هذا الجزء لعرض الأسماء العربية فقط
     for (const category in productCategories) {
         const div = document.createElement('div');
         div.className = 'flex items-center';
@@ -203,7 +196,7 @@ function validateProductStatuses() {
     return allValid;
 }
 
-// دالة البحث عن العملاء (تم إضافتها لتحل محل الـ datalist)
+// دالة البحث عن العملاء
 function handleCustomerSearch(event) {
     const searchTerm = event.target.value.toLowerCase();
     customerListContainer.innerHTML = '';
@@ -231,7 +224,7 @@ function handleCustomerSearch(event) {
     }
 }
 
-
+// دالة الإرسال الرئيسية التي تستدعي دالة الموقع
 async function handleSubmit(event) {
     event.preventDefault();
 
@@ -246,6 +239,28 @@ async function handleSubmit(event) {
     submitBtn.disabled = true;
     loadingSpinner.classList.remove('hidden');
 
+    if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const latitude = position.coords.latitude;
+                const longitude = position.coords.longitude;
+                submitFormData(latitude, longitude);
+            },
+            (error) => {
+                console.error("Error getting location: ", error);
+                submitBtn.disabled = false;
+                loadingSpinner.classList.add('hidden');
+                showWarningMessage('تم إلغاء عملية الإرسال لعدم توفر الموقع الجغرافي.');
+            },
+            { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+        );
+    } else {
+        submitFormData(null, null);
+    }
+}
+
+// دالة جديدة لإرسال البيانات بعد الحصول على الموقع
+async function submitFormData(latitude, longitude) {
     const now = new Date();
     const selectedCustomer = customersMain.find(c => c.Customer_Name_AR === customerNameInput.value);
 
@@ -271,7 +286,7 @@ async function handleSubmit(event) {
         entryUserName: entryUserNameInput.value,
         timestamp: formatTimestamp(now),
         customerType: customerTypeInput.value,
-        notes: notesInput.value || ''
+        notes: notesInput.value || '',
     };
 
     const available = {
@@ -319,13 +334,23 @@ async function handleSubmit(event) {
     dataToSubmit.availableSweets = available['الحلويات'].join(', ');
     dataToSubmit.unavailableSweets = unavailable['الحلويات'].join(', ');
 
+    if (latitude !== null) {
+        dataToSubmit.latitude = latitude;
+        dataToSubmit.longitude = longitude;
+    }
+
     console.log('Final data to submit:', dataToSubmit);
+
+    // **تم التعديل هنا لإرسال البيانات كـ FormData بدلاً من JSON**
+    const formData = new FormData();
+    for (const key in dataToSubmit) {
+        formData.append(key, dataToSubmit[key]);
+    }
 
     try {
         await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
             method: 'POST',
-            mode: 'no-cors',
-            body: JSON.stringify(dataToSubmit),
+            body: formData, // إرسال كائن FormData مباشرةً
         });
         showSuccessMessage();
         visitForm.reset();
@@ -341,8 +366,9 @@ async function handleSubmit(event) {
     }
 }
 
+
 document.addEventListener('DOMContentLoaded', () => {
     loadAllData();
     visitForm.addEventListener('submit', handleSubmit);
-    customerNameInput.addEventListener('input', handleCustomerSearch); // تم إضافة مستمع لحدث الإدخال
+    customerNameInput.addEventListener('input', handleCustomerSearch);
 });
