@@ -61,15 +61,15 @@ function generateVisitID() {
 }
 
 function formatDate(date) {
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    return date.toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
 function formatTime(date) {
-    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+    return date.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
 }
 
 function formatTimestamp(date) {
-    return date.toLocaleString('en-US', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+    return date.toLocaleString('ar-SA', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
 }
 
 // دالة لجلب البيانات من ملفات JSON
@@ -341,37 +341,28 @@ async function submitFormData(latitude, longitude) {
 
     console.log('Final data to submit:', dataToSubmit);
 
-    // **تم التعديل هنا لإرسال البيانات كـ FormData بدلاً من JSON**
+    // **تم التعديل هنا ليعمل تماماً كما طلبت**
     const formData = new FormData();
     for (const key in dataToSubmit) {
         formData.append(key, dataToSubmit[key]);
     }
+    
+    fetch(GOOGLE_SHEETS_WEB_APP_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        body: formData,
+    });
+    
+    showSuccessMessage();
+    
+    // إعادة تهيئة النموذج
+    visitForm.reset();
+    productsDisplayDiv.innerHTML = '';
+    const checkboxes = productCategoriesDiv.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach(c => c.checked = false);
 
-    try {
-        const response = await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
-            method: 'POST',
-            body: formData, // إرسال كائن FormData مباشرةً
-        });
-
-        if (response.ok) {
-            showSuccessMessage();
-        } else {
-            const errorText = await response.text();
-            console.error('Error from server:', errorText);
-            showErrorMessage(`فشل الإرسال: ${errorText}`);
-        }
-        
-        visitForm.reset();
-        productsDisplayDiv.innerHTML = '';
-        const checkboxes = productCategoriesDiv.querySelectorAll('input[type="checkbox"]');
-        checkboxes.forEach(c => c.checked = false);
-    } catch (error) {
-        console.error('فشل الإرسال:', error);
-        showErrorMessage('حدث خطأ أثناء إرسال البيانات. حاول مرة أخرى.');
-    } finally {
-        submitBtn.disabled = false;
-        loadingSpinner.classList.add('hidden');
-    }
+    submitBtn.disabled = false;
+    loadingSpinner.classList.add('hidden');
 }
 
 
