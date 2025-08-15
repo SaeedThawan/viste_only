@@ -348,11 +348,19 @@ async function submitFormData(latitude, longitude) {
     }
 
     try {
-        await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
+        const response = await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
             method: 'POST',
             body: formData, // إرسال كائن FormData مباشرةً
         });
-        showSuccessMessage();
+
+        if (response.ok) {
+            showSuccessMessage();
+        } else {
+            const errorText = await response.text();
+            console.error('Error from server:', errorText);
+            showErrorMessage(`فشل الإرسال: ${errorText}`);
+        }
+        
         visitForm.reset();
         productsDisplayDiv.innerHTML = '';
         const checkboxes = productCategoriesDiv.querySelectorAll('input[type="checkbox"]');
