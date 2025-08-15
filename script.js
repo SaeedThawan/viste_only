@@ -248,14 +248,18 @@ async function handleSubmit(event) {
             },
             (error) => {
                 console.error("Error getting location: ", error);
+                // **تم التعديل هنا لعدم إرسال النموذج عند فشل الحصول على الموقع**
                 submitBtn.disabled = false;
                 loadingSpinner.classList.add('hidden');
-                showWarningMessage('تم إلغاء عملية الإرسال لعدم توفر الموقع الجغرافي.');
+                showErrorMessage('فشل الحصول على الموقع الجغرافي. لا يمكن إرسال النموذج.');
             },
             { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
         );
     } else {
-        submitFormData(null, null);
+        // **تم التعديل هنا لعدم إرسال النموذج إذا كان المتصفح لا يدعم الموقع**
+        submitBtn.disabled = false;
+        loadingSpinner.classList.add('hidden');
+        showErrorMessage('المتصفح لا يدعم الحصول على الموقع الجغرافي. لا يمكن إرسال النموذج.');
     }
 }
 
@@ -341,7 +345,6 @@ async function submitFormData(latitude, longitude) {
 
     console.log('Final data to submit:', dataToSubmit);
 
-    // **تم التعديل هنا ليعمل تماماً كما طلبت**
     const formData = new FormData();
     for (const key in dataToSubmit) {
         formData.append(key, dataToSubmit[key]);
